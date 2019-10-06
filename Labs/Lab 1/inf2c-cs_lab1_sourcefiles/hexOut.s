@@ -36,15 +36,15 @@ loop:   srl  $t1, $s0, 28  # get leftmost digit by shifting it
 
         # The following instructions convert the number to a char
         slti $t2, $t1, 10  # t2 is set to 1 if $t1 < 10
-        bgtz $t7, nocheck
+        bgtz $t7, nocheck # if the no check flag 
         beq  $t1,$zero, noprint
-        addi $t7, $zero, 1
+        addi $t7, $zero, 1 # t7 acts as a flag variable for the zero check
 nocheck:
         beq  $t2, $0,  over10
         addi  $t1, $t1, 48 # ASCII for '0' is 48
         j    print
         
-#note for two's complement, xor with 0xFFFFFFFF to flip bits then add 1
+#note for two's complement, xor with -1 to flip bits then add 1
         
 over10: addi  $t1, $t1, 55 # convert to ASCII for A-F
                            # ASCII code for 'A' is 65
