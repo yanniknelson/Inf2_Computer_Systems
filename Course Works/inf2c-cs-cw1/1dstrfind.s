@@ -160,6 +160,7 @@ main_end:
 #----------------------------------------------------------------
 
 STRFIND:
+	move $t3, $0 # found = 0;
 	move $t0,  $0 # idx = 0;
 	move $t1, $0 # grid_idx = 0;
 FIND_WHILE:
@@ -178,6 +179,8 @@ FIND_WHILE:
 		sw $t0, 0($sp) # save idx
 		addi $sp, $sp, -4
 		sw $t1, 0($sp) # save grid_idx
+		addi $sp, $sp, -4
+		sw $t3, 0($sp) # save found
 		
 		
 		# call contain
@@ -187,6 +190,8 @@ FIND_WHILE:
 		
 		
 		# get all variables back
+		lw $t3, 0($sp) # load found
+		addi $sp, $sp, 4
 		lw $t1, 0($sp) # load grid_idx
 		addi $sp, $sp, 4
 		lw $t0, 0($sp) # idx
@@ -196,6 +201,7 @@ FIND_WHILE:
 		
 		
 		beqz $v0, FIND_FOR_SKIP # if (contain(grid + grid_idx, word)){
+		addi $t3, $0, 1
 		addi $v0, $0, 1
 		add $a0, $t1, $0
 		syscall # print_int(grid_index)
@@ -215,7 +221,7 @@ FIND_WHILE:
 		
 		addi $a0, $0, 10
 		syscall # printf('\n');
-		jr $ra # return
+		#jr $ra # return
 		FIND_FOR_SKIP:
 		addi $t0, $t0, 1 # idx ++;
 		j FIND_FOR 
@@ -223,9 +229,11 @@ FIND_WHILE:
 	addi $t1, $t1, 1 # grid_idx += 1;
 	j FIND_WHILE # }
 END_FIND_WHILE:
+	bnez $t3, DONT_PRINT
 	la $a0, default_ret
 	addi $v0, $0, 4
 	syscall # printf("-1\n");
+	DONT_PRINT:
 	jr $ra # return to cal
 	
 	

@@ -87,6 +87,7 @@ int contain(char *string, char *word)
 // this functions finds the first match in the grid
 void strfind()
 {
+  int found = 0;
   int idx = 0;
   int grid_idx = 0;
   char *word;
@@ -94,18 +95,19 @@ void strfind()
     for(idx = 0; idx < dict_num_words; idx ++) {
       word = dictionary + dictionary_idx[idx]; 
       if (contain(grid + grid_idx, word)) {
+        found = 1;
         print_int(grid_idx);
         print_char(' ');
         print_word(word);
         print_char('\n');
-        return;
       }
     }
 
     grid_idx++;
   }
-
-  print_string("-1\n");
+  if (!found){
+    print_string("-1\n");
+  }
 }
 
 //---------------------------------------------------------------------------
