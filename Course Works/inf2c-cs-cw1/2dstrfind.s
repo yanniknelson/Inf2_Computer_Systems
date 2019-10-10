@@ -313,6 +313,70 @@ FIND_WHILE:
 		
 		NOT_VERTICAL: # }
 		
+		# save all variables to stack
+		addi $sp, $sp, -4
+		sw $ra, 0($sp) # save return address
+		addi $sp, $sp, -4
+		sw $t0, 0($sp) # save idx
+		addi $sp, $sp, -4
+		sw $t1, 0($sp) # save grid_idx
+		addi $sp, $sp, -4
+		sw $t3, 0($sp) # save found
+		
+		
+		# call contain for diagonal
+		add $a0, $t1, $0 # pass grid_idx
+		lb $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
+		add $a2, $0, $s1 
+		addi $a2, $a2, 1 # pass linewidth + 1 for inc (Diagonal)
+		jal CONTAIN # contain(grid + grid_idx, word)
+		
+		
+		# get all variables back
+		lw $t3, 0($sp) # load found
+		addi $sp, $sp, 4
+		lw $t1, 0($sp) # load grid_idx
+		addi $sp, $sp, 4
+		lw $t0, 0($sp) # idx
+		addi $sp, $sp, 4
+		lw $ra, 0($sp) # load return address
+		addi $sp, $sp, 4
+		
+		
+		beqz $v0, NOT_DIAGONAL # if (contain(grid + grid_idx, word)){
+			addi $t3, $0, 1 # found = 1;
+		
+			# this prints all the data
+			addi $v0, $0, 1
+			add $a0, $t1, $0
+			div $a0, $s1 # lo = grid_index div linewidth   hi = grid_index mod linewidth
+			mflo $a0
+			syscall # print_int(grid_index / linewidth)
+			addi $v0, $0, 11
+			addi $a0, $0, 44
+			syscall # print_char(',');
+			addi $v0, $0, 1
+			mfhi $a0
+			syscall # print_int(grid_index % linewidth)
+			la $a0, diagonal_label
+			addi $v0, $0, 4
+			syscall # printf(" H ");
+			addi $v0, $0, 11 # print characters
+			sll $t7, $t0, 2 # multiply idx by for for word alignment
+			lb $t5, dictionary_idx($t7) # get the index first character of the word and put it in $t5
+			addi $t6, $0, 10 # $t6 = '\n'
+			DPRINT_LOOP:
+				lb $a0, dictionary($t5) # get character
+				beq $a0, $t6, END_DPRINT_LOOP # if the character is a linebreak stop the print loop otherwise
+					syscall # print the character
+					addi $t5, $t5, 1 # move to the next pointer
+					j DPRINT_LOOP # go back to the start of the print loop
+			END_DPRINT_LOOP:
+			addi $a0, $0, 10
+			syscall # printf('\n');
+		
+		NOT_DIAGONAL: # }
+		
 		addi $t0, $t0, 1 # idx ++;
 		j FIND_FOR 
 	END_FIND_FOR:

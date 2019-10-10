@@ -72,6 +72,7 @@ void print_word(char *word)
 // function to see if the string contains the (\n terminated) word
 // to check horizontally inc should be 1
 // to check vertically inc should be linewidth
+// to check diagonally inc should be linewidth + 1 (but i need a check at the end to stop i running off)
 int contain(char *string, char *word, int inc)
 {
   while (1) {
@@ -100,7 +101,7 @@ void strfind()
   while (grid[grid_idx] != '\0') {
     for(idx = 0; idx < dict_num_words; idx ++) {
       word = dictionary + dictionary_idx[idx]; 
-      if (containH(grid + grid_idx, word, 1)) {
+      if (contain(grid + grid_idx, word, 1)) {
         found = 1;
         print_int(grid_idx/linewidth);
         print_char(',');  
@@ -109,12 +110,21 @@ void strfind()
         print_word(word);
         print_char('\n');
       }
-      if (containH(grid + grid_idx, word, linewidth)) {
+      if (contain(grid + grid_idx, word, linewidth)) {
         found = 1;
         print_int(grid_idx/linewidth);
         print_char(',');  
         print_int(grid_idx%linewidth);
         printf(" V ");
+        print_word(word);
+        print_char('\n');
+      }
+      if (contain(grid + grid_idx, word, linewidth + 1)) {
+        found = 1;
+        print_int(grid_idx/linewidth);
+        print_char(',');  
+        print_int(grid_idx%linewidth);
+        printf(" D ");
         print_word(word);
         print_char('\n');
       }
