@@ -58,7 +58,7 @@ char dictionary[MAX_DICTIONARY_WORDS * (MAX_WORD_SIZE + 1 /* for \n */ ) + 1 /* 
 int dictionary_idx[MAX_DICTIONARY_WORDS];
 // number of words in the dictionary
 int dict_num_words = 0;
-
+int linewidth = 0;
 
 // function to print found word
 void print_word(char *word)
@@ -70,14 +70,20 @@ void print_word(char *word)
 }
 
 // function to see if the string contains the (\n terminated) word
-int contain(char *string, char *word)
+// to check horizontally inc should be 1
+// to check vertically inc should be linewidth
+int contain(char *string, char *word, int inc)
 {
   while (1) {
-    if (*string != *word){
-      return (*word == '\n'); 
+    if (*string != '\n'){
+      if (*string != *word){
+        return (*word == '\n'); 
+      }
+    } else {
+      return (*word == '\n');
     }
 
-    string++;
+    string += inc;
     word++;
   }
 
@@ -94,10 +100,21 @@ void strfind()
   while (grid[grid_idx] != '\0') {
     for(idx = 0; idx < dict_num_words; idx ++) {
       word = dictionary + dictionary_idx[idx]; 
-      if (contain(grid + grid_idx, word)) {
+      if (containH(grid + grid_idx, word, 1)) {
         found = 1;
-        print_int(grid_idx);
-        print_char(' ');
+        print_int(grid_idx/linewidth);
+        print_char(',');  
+        print_int(grid_idx%linewidth);
+        printf(" H ");
+        print_word(word);
+        print_char('\n');
+      }
+      if (containH(grid + grid_idx, word, linewidth)) {
+        found = 1;
+        print_int(grid_idx/linewidth);
+        print_char(',');  
+        print_int(grid_idx%linewidth);
+        printf(" V ");
         print_word(word);
         print_char('\n');
       }
@@ -119,6 +136,7 @@ int main (void)
 
   int dict_idx = 0;
   int start_idx = 0;
+  int width = 0;
 
   /////////////Reading dictionary and grid files//////////////
   ///////////////Please DO NOT touch this part/////////////////
@@ -190,6 +208,12 @@ int main (void)
   } while (1);
 
   dict_num_words = dict_idx;
+
+  
+  while (grid[linewidth] != '\n'){
+    linewidth += 1;
+  }
+  linewidth += 1;
 
   strfind();
 

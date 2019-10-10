@@ -138,7 +138,7 @@ WORD_LOOP: # do {
 	addi $t4, $0, 10
 	bne $t3, $t4, WORD_SKIP # if (c_input == '/n'){
 	sw $t1, dictionary_idx($t2) # dictionary_idx[dict_index] = start_index
-	addi $t2, $t2, 4 # dict_index++
+	addi $t2, $t2, 4 # dict_index++      dictionary_idx will use words as using bytes limits it's maximum storable index to 255, which won't work if the dictionary is full
 	add $t1, $t0, 1 # start_index = idx + 1 
 WORD_SKIP: # }
 	addi $t0, $t0, 1 # idx += 1;

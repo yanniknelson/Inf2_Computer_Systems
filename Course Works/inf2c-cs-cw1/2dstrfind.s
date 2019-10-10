@@ -32,6 +32,13 @@ dictionary:             .space 11001    # Maximum number of words in dictionary 
                                         # ( maximum size of each word + \n) + NULL
 # You can add your data here!
 
+.align 4
+dictionary_idx:		.space 4000
+default_ret:		.asciiz "-1\n"
+horizontal_label:	.asciiz " H "
+vertical_label:		.asciiz " V "
+diagonal_label:		.asciiz " D "
+
 #=========================================================================
 # TEXT SEGMENT  
 #=========================================================================
@@ -122,6 +129,37 @@ END_LOOP2:
 
 
 # You can add your code here!
+ 	move $t1, $0 # start_index = 0;
+	move $t2, $0 # dict_index = 0;
+	move $t0, $0 # idx = 0;
+WORD_LOOP: # do {
+	lb $t3, dictionary($t0) # c_input = dictionary[idx];
+	beqz $t3, END_WORD	# if (c_input == '/0'){
+				#	break; 
+				# }
+	addi $t4, $0, 10
+	bne $t3, $t4, WORD_SKIP # if (c_input == '/n'){
+	sw $t1, dictionary_idx($t2) # dictionary_idx[dict_index] = start_index
+	addi $t2, $t2, 4 # dict_index++      dictionary_idx will use words as using bytes limits it's maximum storable index to 255, which won't work if the dictionary is full
+	add $t1, $t0, 1 # start_index = idx + 1 
+WORD_SKIP: # }
+	addi $t0, $t0, 1 # idx += 1;
+	j WORD_LOOP # } while(1);
+END_WORD: 
+
+	move $s0, $t2 # dict_num_words = dict_index;
+	sra $s0, $s0, 2 # dict_num_words / 4 (to get number of words not number of bytes used)
+	
+	move $s1, $0 # linewidth = 0;
+FIND_LINE_WIDTH_LOOP:
+	lb $t1, grid($s1) # grid[linewidth]
+	addi $t2, $0, 10 # '\n'
+	beq $t1, $t2, END_LINE_WIDTH_LOOP # while (grid[linewidth != '\n') {
+	addi $s1, $s1, 1
+	j FIND_LINE_WIDTH_LOOP # }
+END_LINE_WIDTH_LOOP:
+	addi $s1, $s1, 1
+	jal STRFIND
  
 #------------------------------------------------------------------
 # Exit, DO NOT MODIFY THIS BLOCK
@@ -133,3 +171,180 @@ main_end:
 #----------------------------------------------------------------
 # END OF CODE
 #----------------------------------------------------------------
+
+STRFIND:
+	move $t3, $0 # found = 0;
+	move $t0,  $0 # idx = 0;
+	move $t1, $0 # grid_idx = 0;
+FIND_WHILE:
+	lb $t7, grid($t1) # $t7 = grid[grid_idx]
+	beqz $t7, END_FIND_WHILE # while(grid[grid_idx] != '\0') {
+	move $t0, $0 # for (idx = 0;
+	FIND_FOR:
+		bge $t0, $s0, END_FIND_FOR # idx < dict_num_words;
+		sll $t7, $t0, 2 # idx * 4 to make it word aligned
+		lb $t2, dictionary_idx($t7) # dictionary_idx[idx * 4]
+		
+		
+		# save all variables to stack
+		addi $sp, $sp, -4
+		sw $ra, 0($sp) # save return address
+		addi $sp, $sp, -4
+		sw $t0, 0($sp) # save idx
+		addi $sp, $sp, -4
+		sw $t1, 0($sp) # save grid_idx
+		addi $sp, $sp, -4
+		sw $t3, 0($sp) # save found
+		
+		
+		# call contain for horizontal
+		add $a0, $t1, $0 # pass grid_idx
+		lb $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
+		addi $a2, $0, 1 # pass 1 for inc (horizontal
+		jal CONTAIN # contain(grid + grid_idx, word)
+		
+		
+		# get all variables back
+		lw $t3, 0($sp) # load found
+		addi $sp, $sp, 4
+		lw $t1, 0($sp) # load grid_idx
+		addi $sp, $sp, 4
+		lw $t0, 0($sp) # idx
+		addi $sp, $sp, 4
+		lw $ra, 0($sp) # load return address
+		addi $sp, $sp, 4
+		
+		
+		beqz $v0, NOT_HORIZONTAL # if (contain(grid + grid_idx, word)){
+			addi $t3, $0, 1 # found = 1;
+		
+			# this prints all the data
+			addi $v0, $0, 1
+			add $a0, $t1, $0
+			div $a0, $s1 # lo = grid_index div linewidth   hi = grid_index mod linewidth
+			mflo $a0
+			syscall # print_int(grid_index / linewidth)
+			addi $v0, $0, 11
+			addi $a0, $0, 44
+			syscall # print_char(',');
+			addi $v0, $0, 1
+			mfhi $a0
+			syscall # print_int(grid_index % linewidth)
+			la $a0, horizontal_label
+			addi $v0, $0, 4
+			syscall # printf(" H ");
+			addi $v0, $0, 11 # print characters
+			sll $t7, $t0, 2 # multiply idx by 4 for word alignment
+			lb $t5, dictionary_idx($t7) # get the index first character of the word and put it in $t5
+			addi $t6, $0, 10 # $t6 = '\n'
+			HPRINT_LOOP:
+				lb $a0, dictionary($t5) # get character
+				beq $a0, $t6, END_HPRINT_LOOP # if the character is a linebreak stop the print loop otherwise
+					syscall # print the character
+					addi $t5, $t5, 1 # move to the next pointer
+					j HPRINT_LOOP # go back to the start of the print loop
+			END_HPRINT_LOOP:
+			addi $a0, $0, 10
+			syscall # printf('\n');
+		
+		
+		NOT_HORIZONTAL: #}
+		
+		# save all variables to stack
+		addi $sp, $sp, -4
+		sw $ra, 0($sp) # save return address
+		addi $sp, $sp, -4
+		sw $t0, 0($sp) # save idx
+		addi $sp, $sp, -4
+		sw $t1, 0($sp) # save grid_idx
+		addi $sp, $sp, -4
+		sw $t3, 0($sp) # save found
+		
+		
+		# call contain for vertical
+		add $a0, $t1, $0 # pass grid_idx
+		lb $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
+		add $a2, $0, $s1 # pass linewidth for inc (vertical)
+		jal CONTAIN # contain(grid + grid_idx, word)
+		
+		
+		# get all variables back
+		lw $t3, 0($sp) # load found
+		addi $sp, $sp, 4
+		lw $t1, 0($sp) # load grid_idx
+		addi $sp, $sp, 4
+		lw $t0, 0($sp) # idx
+		addi $sp, $sp, 4
+		lw $ra, 0($sp) # load return address
+		addi $sp, $sp, 4
+		
+		
+		beqz $v0, NOT_VERTICAL # if (contain(grid + grid_idx, word)){
+			addi $t3, $0, 1 # found = 1;
+		
+			# this prints all the data
+			addi $v0, $0, 1
+			add $a0, $t1, $0
+			div $a0, $s1 # lo = grid_index div linewidth   hi = grid_index mod linewidth
+			mflo $a0
+			syscall # print_int(grid_index / linewidth)
+			addi $v0, $0, 11
+			addi $a0, $0, 44
+			syscall # print_char(',');
+			addi $v0, $0, 1
+			mfhi $a0
+			syscall # print_int(grid_index % linewidth)
+			la $a0, vertical_label
+			addi $v0, $0, 4
+			syscall # printf(" H ");
+			addi $v0, $0, 11 # print characters
+			sll $t7, $t0, 2 # multiply idx by for for word alignment
+			lb $t5, dictionary_idx($t7) # get the index first character of the word and put it in $t5
+			addi $t6, $0, 10 # $t6 = '\n'
+			VPRINT_LOOP:
+				lb $a0, dictionary($t5) # get character
+				beq $a0, $t6, END_VPRINT_LOOP # if the character is a linebreak stop the print loop otherwise
+					syscall # print the character
+					addi $t5, $t5, 1 # move to the next pointer
+					j VPRINT_LOOP # go back to the start of the print loop
+			END_VPRINT_LOOP:
+			addi $a0, $0, 10
+			syscall # printf('\n');
+		
+		NOT_VERTICAL: # }
+		
+		addi $t0, $t0, 1 # idx ++;
+		j FIND_FOR 
+	END_FIND_FOR:
+	addi $t1, $t1, 1 # grid_idx += 1;
+	j FIND_WHILE # }
+END_FIND_WHILE:
+	bnez $t3, DONT_PRINT
+	la $a0, default_ret
+	addi $v0, $0, 4
+	syscall # printf("-1\n");
+	DONT_PRINT:
+	jr $ra # return to cal
+	
+	
+CONTAIN:
+	CONTAIN_WHILE:  # while (1) {
+		lb $t0, grid($a0) # get *string
+		lb $t1, dictionary($a1) # get *word
+		addi $t3, $0, 10
+		beq $t0, $t3, END_OF_LINE # if (*string != '/n') do the rest of the stuff otherwise go to END_OF_LINE
+		beq $t0, $t1, CONTAIN_CONTINUE # if (*string != *word){
+			END_OF_LINE: # as in the c, we do the same check, jumping here simply avoid duplicating code, see bellow 
+			seq $v0, $t1, $t3 # set return value to *word == '\n'
+			jr $ra # return
+		CONTAIN_CONTINUE: # }
+		add $a0, $a0, $a2 # string += inc
+		addi $a1, $a1, 1 # word += 1
+		j CONTAIN_WHILE # }
+	END_CONTAIN_WHILE:
+	move $v0, $0
+	jr $ra # return 0
+	
+# END_OF_LINE:
+#	seq $v0, $t1, $t3 # set retunr value to *word == '\n'
+#	jr $ra # return
