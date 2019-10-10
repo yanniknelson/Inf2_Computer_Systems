@@ -182,8 +182,7 @@ FIND_WHILE:
 	move $t0, $0 # for (idx = 0;
 	FIND_FOR:
 		bge $t0, $s0, END_FIND_FOR # idx < dict_num_words;
-		sll $t7, $t0, 2 # idx * 4 to make it word aligned
-		lb $t2, dictionary_idx($t7) # dictionary_idx[idx * 4]
+		
 		
 		
 		# save all variables to stack
@@ -198,6 +197,8 @@ FIND_WHILE:
 		
 		
 		# call contain for horizontal
+		sll $t7, $t0, 2 # idx * 4 to make it word aligned
+		lb $t2, dictionary_idx($t7) # dictionary_idx[idx * 4]
 		add $a0, $t1, $0 # pass grid_idx
 		lb $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
 		addi $a2, $0, 1 # pass 1 for inc (horizontal
@@ -262,6 +263,8 @@ FIND_WHILE:
 		
 		
 		# call contain for vertical
+		sll $t7, $t0, 2 # idx * 4 to make it word aligned
+		lb $t2, dictionary_idx($t7) # dictionary_idx[idx * 4]
 		add $a0, $t1, $0 # pass grid_idx
 		lb $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
 		add $a2, $0, $s1 # pass linewidth for inc (vertical)
@@ -325,6 +328,8 @@ FIND_WHILE:
 		
 		
 		# call contain for diagonal
+		sll $t7, $t0, 2 # idx * 4 to make it word aligned
+		lb $t2, dictionary_idx($t7) # dictionary_idx[idx * 4]
 		add $a0, $t1, $0 # pass grid_idx
 		lb $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
 		add $a2, $0, $s1 
@@ -392,6 +397,7 @@ END_FIND_WHILE:
 	
 	
 CONTAIN:
+	li $t7, 1056 # save the largest possible index in $t7
 	CONTAIN_WHILE:  # while (1) {
 		lb $t0, grid($a0) # get *string
 		lb $t1, dictionary($a1) # get *word
@@ -403,6 +409,7 @@ CONTAIN:
 			jr $ra # return
 		CONTAIN_CONTINUE: # }
 		add $a0, $a0, $a2 # string += inc
+		blt $t7, $a0, END_OF_LINE # if $a0 points outside of grid, check if the word being compared against has aslo ended, if so then it matches, if not then it doesn't
 		addi $a1, $a1, 1 # word += 1
 		j CONTAIN_WHILE # }
 	END_CONTAIN_WHILE:

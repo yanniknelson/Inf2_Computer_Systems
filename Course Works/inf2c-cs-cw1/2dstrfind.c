@@ -72,7 +72,7 @@ void print_word(char *word)
 // function to see if the string contains the (\n terminated) word
 // to check horizontally inc should be 1
 // to check vertically inc should be linewidth
-// to check diagonally inc should be linewidth + 1 (but i need a check at the end to stop i running off)
+// to check diagonally inc should be linewidth + 1 ( need check for end of lines)
 int contain(char *string, char *word, int inc)
 {
   while (1) {
@@ -85,6 +85,9 @@ int contain(char *string, char *word, int inc)
     }
 
     string += inc;
+    if ((string - grid) > (MAX_DIM_SIZE + 1 /* for \n */ ) * MAX_DIM_SIZE){
+      return(*word == '\n');
+    }
     word++;
   }
 
