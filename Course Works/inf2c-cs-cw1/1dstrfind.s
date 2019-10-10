@@ -32,7 +32,7 @@ dictionary:             .space 11001    # Maximum number of words in dictionary 
                                         # ( maximum size of each word + \n) + NULL
 # You can add your data here!
 .align 4
-dictionary_idx:		.space 1000
+dictionary_idx:		.space 4000
 default_ret:		.asciiz "-1\n"
 #=========================================================================
 # TEXT SEGMENT  
@@ -137,8 +137,8 @@ WORD_LOOP: # do {
 				# }
 	addi $t4, $0, 10
 	bne $t3, $t4, WORD_SKIP # if (c_input == '/n'){
-	sb $t1, dictionary_idx($t2) # dictionary_idx[dict_index] = start_index
-	addi $t2, $t2, 1 # dict_index++
+	sw $t1, dictionary_idx($t2) # dictionary_idx[dict_index] = start_index
+	addi $t2, $t2, 4 # dict_index++
 	add $t1, $t0, 1 # start_index = idx + 1 
 WORD_SKIP: # }
 	addi $t0, $t0, 1 # idx += 1;
@@ -146,6 +146,7 @@ WORD_SKIP: # }
 END_WORD: 
 
 	move $s0, $t2 # dict_num_words = dict_index;
+	sra $s0, $s0, 2 # dict_num_words / 4 (to get number of words not number of bytes used)
 	
 	jal STRFIND
 #------------------------------------------------------------------
@@ -169,7 +170,8 @@ FIND_WHILE:
 	move $t0, $0 # for (idx = 0;
 	FIND_FOR:
 		bge $t0, $s0, END_FIND_FOR # idx < dict_num_words;
-		lb $t2, dictionary_idx($t0) # dictionary_idx[idx]
+		sll $t7, $t0, 2 # idx * 4 to make it word aligned
+		lb $t2, dictionary_idx($t7) # dictionary_idx[idx * 4]
 		
 		
 		# save all variables to stack
@@ -185,7 +187,7 @@ FIND_WHILE:
 		
 		# call contain
 		add $a0, $t1, $0 # pass grid_idx
-		lb $a1, dictionary_idx($t0) # pass dictionary_idx[idx]
+		lb $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
 		jal CONTAIN # contain(grid + grid_idx, word)
 		
 		
@@ -209,7 +211,8 @@ FIND_WHILE:
 		addi $a0, $0, 32
 		syscall # printf(' ');
 		
-		lb $t5, dictionary_idx($t0)
+		sll $t7, $t0, 2
+		lb $t5, dictionary_idx($t7)
 		addi $t6, $0, 10
 		PRINT_LOOP:
 		lb $a0, dictionary($t5)
