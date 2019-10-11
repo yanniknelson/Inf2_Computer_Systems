@@ -76,6 +76,7 @@ void print_word(char *word)
 int contain(char *string, char *word, int inc)
 {
   while (1) {
+
     if (*string != '\n'){
       if (*string != *word){
         return (*word == '\n'); 
@@ -85,9 +86,10 @@ int contain(char *string, char *word, int inc)
     }
 
     string += inc;
-    if ((string - grid) > (MAX_DIM_SIZE + 1 /* for \n */ ) * MAX_DIM_SIZE){
-      return(*word == '\n');
+    if ((string - grid) > (MAX_DIM_SIZE + 1 /* for \n */ ) * MAX_DIM_SIZE) {// if the current index within the grid is greater than the max index of the grid,
+      return(*word == '\n'); //check if at the end of the word, if so, its a match, if not it's not
     }
+
     word++;
   }
 
