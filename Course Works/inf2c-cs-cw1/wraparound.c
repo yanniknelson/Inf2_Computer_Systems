@@ -75,46 +75,54 @@ void print_word(char *word)
 // to check horizontally inc should be 1
 // to check vertically inc should be linewidth
 // to check diagonally inc should be linewidth + 1 ( need check for end of lines)
+
+//stepback will be 0 if we're checking diagonally
 int contain(char *string, char *word, int inc, int stepback)
 {
   while (1) {
-    if (*string == '\n') {
-      if (stepback){
+    if (*string == '\n') { //if we are looking at the end of a line
+      if (stepback){ 
+        //if we're not checking diagonally stepback the given amount
         string -= stepback;
       } else {
-        string -= (linewidth + 1) * ((string-grid)/linewidth);
+        //if we're checking diagonally find how many rows 'down' we are and move that value up and to the 'right'
+        string -= (linewidth + 1) * ((string-grid)/linewidth); 
+        
       }
     }
 
-    if ((string - grid) > (size - 1)){
+    if ((string - grid) > (size - 1)){ //if we've run off the end of the grid
       if (stepback){
+        //if we're not checking diagonally stepback the given amount
         string -= stepback;
       } else {
+        //if we're checking diagonally find how many rows 'down' we are and move that value up and to the 'right'
         string -= (linewidth + 1) * ((string-grid)/linewidth);
       }
     } 
 
-    if (*string != *word){
-      return (*word == '\n');
+    if (*string != *word){ //if the characters we're looking at in string and word differ
+      return (*word == '\n'); //check if the word is over, if so return true, if not return false
     } 
          
-    string += inc;
+    string += inc; //move forward the specified amount
 
-    if ((string - grid) > (MAX_DIM_SIZE + 1 /* for \n */ ) * MAX_DIM_SIZE) {// if the current index within the grid is greater than the max index of the grid,
+    if ((string - grid) > (MAX_DIM_SIZE + 1 /* for \n */ ) * MAX_DIM_SIZE) { // if the current index within the grid is greater than the max index of the grid,
       printf("out of bounds \n"); //for debugging c (not needed in MIPS)
       if (stepback){
+        //if we're not checking diagonally stepback the given amount
         string -= stepback;
       } else {
+        //if we're checking diagonally find how many rows 'down' we are and move that value up and to the 'right'
         string -= (linewidth + 1) * ((string-grid)/linewidth);
       }
-      //return(*word == '\n'); //check if at the end of the word, if so, its a match, if not it's not
     }
 
-    word++;
+    word++; //move forward one character in the string
   }
 }
 
-  // this functions finds the first match in the grid
+//this functions finds the first match in the grid
 void strfind()
 {
   int found = 0;
@@ -122,11 +130,16 @@ void strfind()
   int grid_idx = 0;
   char *word;
   while (grid[grid_idx] != '\0') {
-    for(idx = 0; idx < dict_num_words; idx ++) {
-      word = dictionary + dictionary_idx[idx]; 
-      if (*(grid+grid_idx) != '\n'){
+    //for each position in the grid run through all the words
+    //if we're not looking at the left edge of the grid
+    if (*(grid+grid_idx) != '\n'){
+    
+      for(idx = 0; idx < dict_num_words; idx ++) {
+        word = dictionary + dictionary_idx[idx]; 
+        //check if the word starts at the current possition 
+        //horizontally
         if (contain(grid + grid_idx, word, 1, linewidth - 1)) {
-          found = 1;
+          found = 1; //set the word found flat to true
           print_int(grid_idx/linewidth);
           print_char(',');  
           print_int(grid_idx%linewidth);
@@ -134,8 +147,9 @@ void strfind()
           print_word(word);
           print_char('\n');
         }
+        //vertically
         if (contain(grid + grid_idx, word, linewidth, size)) {
-          found = 1;
+          found = 1; //set the word found flat to true
           print_int(grid_idx/linewidth);
           print_char(',');  
           print_int(grid_idx%linewidth);
@@ -143,8 +157,9 @@ void strfind()
           print_word(word);
           print_char('\n');
         }
+        //diagonally
         if (contain(grid + grid_idx, word, linewidth + 1, 0)) {
-          found = 1;
+          found = 1; //set the word found flat to true
           print_int(grid_idx/linewidth);
           print_char(',');  
           print_int(grid_idx%linewidth);
@@ -152,12 +167,11 @@ void strfind()
           print_word(word);
           print_char('\n');
         }
-      }
     }
-
-    grid_idx++;
+    }
+    grid_idx++; //move to the next position in the grid
   }
-  if (!found){
+  if (!found){ //if the word found flag isn't true print the default return value
     print_string("-1\n");
   }
 }
@@ -229,6 +243,8 @@ int main (void)
   fclose(dictionary_file);
   //////////////////////////End of reading////////////////////////
   ///////////////You can add your code here!//////////////////////
+
+  //find all the starting indices of the words in dictionary and save then in dictionary_idx
   idx = 0;
   do {
     c_input = dictionary[idx];
@@ -244,12 +260,10 @@ int main (void)
 
   dict_num_words = dict_idx;
 
-  
-  while (grid[linewidth] != '\n'){
-    linewidth += 1;
-  }
-  linewidth += 1;
+  //count the number of characters in a line
+  while(grid[linewidth++] != '\n');
 
+  //count the number of rows
   int count = 0;
   while (grid[count] != '\0'){
     if (grid[count] == '\n'){
@@ -258,6 +272,7 @@ int main (void)
     count++;
   }
 
+  //save the toatl number of non '/0' characters in the grid
   size = rows * linewidth;
 
   strfind();
