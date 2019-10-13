@@ -151,9 +151,9 @@ END_WORD:
 	sra $s0, $s0, 2 # dict_num_words / 4 (to get number of words not number of bytes used)
 	
 	move $s1, $0 # linewidth = 0;
+	addi $t2, $0, 10 # '\n'
 FIND_LINE_WIDTH_LOOP:
 	lb $t1, grid($s1) # grid[linewidth]
-	addi $t2, $0, 10 # '\n'
 	beq $t1, $t2, END_LINE_WIDTH_LOOP # while (grid[linewidth != '\n') {
 	addi $s1, $s1, 1
 	j FIND_LINE_WIDTH_LOOP # }
@@ -398,10 +398,10 @@ END_FIND_WHILE:
 	
 CONTAIN:
 	li $t7, 1056 # save the largest possible index in $t7
+	addi $t3, $0, 10 # $t3 = '\n'
 	CONTAIN_WHILE:  # while (1) {
 		lb $t0, grid($a0) # get *string
 		lb $t1, dictionary($a1) # get *word
-		addi $t3, $0, 10
 		beq $t0, $t3, END_OF_LINE # if (*string != '/n') do the rest of the stuff otherwise go to END_OF_LINE
 		beq $t0, $t1, CONTAIN_CONTINUE # if (*string != *word){
 			END_OF_LINE: # as in the c, we do the same check, jumping here simply avoid duplicating code, see bellow 
