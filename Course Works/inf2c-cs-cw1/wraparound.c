@@ -77,17 +77,21 @@ void print_word(char *word)
 // to check diagonally inc should be linewidth + 1 ( need check for end of lines)
 
 //stepback will be 0 if we're checking diagonally
+
+#define MIN(x,y) (((x) < (y)) ? (x): (y))
+
 int contain(char *string, char *word, int inc, int stepback)
 {
+  int diaglength = 0;
   while (1) {
     if (*string == '\n') { //if we are looking at the end of a line
       if (stepback){ 
         //if we're not checking diagonally stepback the given amount
         string -= stepback;
       } else {
-        //if we're checking diagonally find how many rows 'down' we are and move that value up and to the 'right'
-        string -= (linewidth + 1) * ((string-grid)/linewidth); 
-        
+	diaglength = MIN((string-grid)/linewidth, (string-grid)%linewidth);
+	//if we're checking diagonally find how many rows 'down' we are and move that value up and to the 'right'
+        string -= (linewidth + 1) * diaglength; 
       }
     }
 
@@ -96,8 +100,9 @@ int contain(char *string, char *word, int inc, int stepback)
         //if we're not checking diagonally stepback the given amount
         string -= stepback;
       } else {
-        //if we're checking diagonally find how many rows 'down' we are and move that value up and to the 'right'
-        string -= (linewidth + 1) * ((string-grid)/linewidth);
+        diaglength = MIN((string-grid)/linewidth, (string-grid)%linewidth);
+	//if we're checking diagonally find how many rows 'down' we are and move that value up and to the 'right'
+        string -= (linewidth + 1) * diaglength;
       }
     } 
 
@@ -108,13 +113,14 @@ int contain(char *string, char *word, int inc, int stepback)
     string += inc; //move forward the specified amount
 
     if ((string - grid) > (MAX_DIM_SIZE + 1 /* for \n */ ) * MAX_DIM_SIZE) { // if the current index within the grid is greater than the max index of the grid,
-      printf("out of bounds \n"); //for debugging c (not needed in MIPS)
+      //printf("out of bounds \n"); //for debugging c (not needed in MIPS)
       if (stepback){
         //if we're not checking diagonally stepback the given amount
         string -= stepback;
       } else {
+	diaglength = MIN((string-grid)/linewidth, (string-grid)%linewidth);
         //if we're checking diagonally find how many rows 'down' we are and move that value up and to the 'right'
-        string -= (linewidth + 1) * ((string-grid)/linewidth);
+        string -= (linewidth + 1) * diaglength;
       }
     }
 

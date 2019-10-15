@@ -215,9 +215,8 @@ FIND_WHILE:
 		
 		# call contain for horizontal
 		sll $t7, $t0, 2 # idx * 4 to make it word aligned
-		lb $t2, dictionary_idx($t7) # dictionary_idx[idx * 4]
 		add $a0, $t1, $0 # pass grid_idx
-		lb $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
+		lw $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
 		addi $a2, $0, 1 # pass 1 for inc (horizontal)
 		subi $a3, $s1, 1 # pass linewidth-1 for stepback
 		jal CONTAIN # contain(grid + grid_idx, word)
@@ -254,7 +253,7 @@ FIND_WHILE:
 			syscall # printf(" H ");
 			addi $v0, $0, 11 # print characters
 			sll $t7, $t0, 2 # multiply idx by 4 for word alignment
-			lb $t5, dictionary_idx($t7) # get the index first character of the word and put it in $t5
+			lw $t5, dictionary_idx($t7) # get the index first character of the word and put it in $t5
 			addi $t6, $0, 10 # $t6 = '\n'
 			HPRINT_LOOP:
 				lb $a0, dictionary($t5) # get character
@@ -282,9 +281,8 @@ FIND_WHILE:
 		
 		# call contain for vertical
 		sll $t7, $t0, 2 # idx * 4 to make it word aligned
-		lb $t2, dictionary_idx($t7) # dictionary_idx[idx * 4]
 		add $a0, $t1, $0 # pass grid_idx
-		lb $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
+		lw $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
 		add $a2, $0, $s1 # pass linewidth for inc (vertical)
 		add $a3, $0, $s3 # pass size for stepback
 		jal CONTAIN # contain(grid + grid_idx, word)
@@ -321,7 +319,7 @@ FIND_WHILE:
 			syscall # printf(" H ");
 			addi $v0, $0, 11 # print characters
 			sll $t7, $t0, 2 # multiply idx by for for word alignment
-			lb $t5, dictionary_idx($t7) # get the index first character of the word and put it in $t5
+			lw $t5, dictionary_idx($t7) # get the index first character of the word and put it in $t5
 			addi $t6, $0, 10 # $t6 = '\n'
 			VPRINT_LOOP:
 				lb $a0, dictionary($t5) # get character
@@ -348,9 +346,8 @@ FIND_WHILE:
 		
 		# call contain for diagonal
 		sll $t7, $t0, 2 # idx * 4 to make it word aligned
-		lb $t2, dictionary_idx($t7) # dictionary_idx[idx * 4]
 		add $a0, $t1, $0 # pass grid_idx
-		lb $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
+		lw $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
 		add $a2, $0, $s1 
 		addi $a2, $a2, 1 # pass linewidth + 1 for inc (Diagonal)
 		move $a3, $0 # pass 0 for stepback
@@ -388,7 +385,7 @@ FIND_WHILE:
 			syscall # printf(" H ");
 			addi $v0, $0, 11 # print characters
 			sll $t7, $t0, 2 # multiply idx by for for word alignment
-			lb $t5, dictionary_idx($t7) # get the index first character of the word and put it in $t5
+			lw $t5, dictionary_idx($t7) # get the index first character of the word and put it in $t5
 			addi $t6, $0, 10 # $t6 = '\n'
 			DPRINT_LOOP:
 				lb $a0, dictionary($t5) # get character
@@ -432,7 +429,6 @@ CONTAIN:
 		CONTINUE:
 		lb $t0, grid($a0) # get *string
 		beq $t0, $t1, CONTAIN_CONTINUE # if (*string != *word){
-			END_OF_LINE: # as in the c, we do the same check, jumping here simply avoid duplicating code, see bellow 
 			seq $v0, $t1, $t6 # set return value to *word == '\n'
 			jr $ra # return
 		CONTAIN_CONTINUE: # }
@@ -451,8 +447,17 @@ beqz $a3, DIAG # if (stepback){
 	sub $a0, $a0, $a3 # string -= stepback;
 	jr $t5
 DIAG:
+	
 	addi $t2, $s1, 1 # $t2 = linewidth + 1;
-	div $t3, $a0, $s1 # $t3 = (string-grid)/linewidth;            (string-grid) is the address in grid which is $a0
-	mul $t2, $t2, $t3 # $t3 = (linewidth + 1) * ((string-grid)/linewidth);
-	sub $a0, $a0, $t2 # string -= (linewidth + 1) * ((string-grid)/linewidth);
+	div $a0, $s1 # lo = (string-grid)/linewidth;    hi = (string-grid) % linewidth        
+	mflo $s4 
+	mfhi $s5
+	bgt $s4, $s5, GREATER # $t3 = min(lo, hi);
+		move $s6, $s4
+		j DONE
+	GREATER:
+		move $s6, $s5
+	DONE:
+	mul $t2, $t2, $s6 # $t2 = (linewidth + 1) * min((string-grid)/linewidth, (string-grid)%linewidth);
+	sub $a0, $a0, $t2 # string -= (linewidth + 1) * min((string-grid)/linewidth, (string-grid)%linewidth);
 	jr $t5

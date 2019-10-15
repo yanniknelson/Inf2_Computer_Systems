@@ -137,9 +137,9 @@ WORD_LOOP: # do {
 				# }
 	addi $t4, $0, 10
 	bne $t3, $t4, WORD_SKIP # if (c_input == '/n'){
-	sw $t1, dictionary_idx($t2) # dictionary_idx[dict_index] = start_index
-	addi $t2, $t2, 4 # dict_index++      dictionary_idx will use words as using bytes limits it's maximum storable index to 255, which won't work if the dictionary is full
-	add $t1, $t0, 1 # start_index = idx + 1 
+		sw $t1, dictionary_idx($t2) # dictionary_idx[dict_index] = start_index
+		addi $t2, $t2, 4 # dict_index++      dictionary_idx will use words as using bytes limits it's maximum storable index to 255, which won't work if the dictionary is full
+		add $t1, $t0, 1 # start_index = idx + 1 
 WORD_SKIP: # }
 	addi $t0, $t0, 1 # idx += 1;
 	j WORD_LOOP # } while(1);
@@ -171,7 +171,7 @@ FIND_WHILE:
 	FIND_FOR:
 		bge $t0, $s0, END_FIND_FOR # idx < dict_num_words;
 		sll $t7, $t0, 2 # idx * 4 to make it word aligned
-		lb $t2, dictionary_idx($t7) # dictionary_idx[idx * 4]
+		lw $t2, dictionary_idx($t7) # dictionary_idx[idx * 4]
 		
 		
 		# save all variables to stack
@@ -187,7 +187,7 @@ FIND_WHILE:
 		
 		# call contain
 		add $a0, $t1, $0 # pass grid_idx
-		lb $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
+		lw $a1, dictionary_idx($t7) # pass dictionary_idx[idx]
 		jal CONTAIN # contain(grid + grid_idx, word)
 		
 		
@@ -212,7 +212,7 @@ FIND_WHILE:
 		syscall # printf(' ');
 		
 		sll $t7, $t0, 2
-		lb $t5, dictionary_idx($t7)
+		lw $t5, dictionary_idx($t7)
 		addi $t6, $0, 10
 		PRINT_LOOP:
 		lb $a0, dictionary($t5)

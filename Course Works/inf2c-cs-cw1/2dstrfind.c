@@ -88,8 +88,8 @@ int contain(char *string, char *word, int inc)
     string += inc;//move forward the specified amount
     
     if ((string - grid) > (MAX_DIM_SIZE + 1 /* for \n */ ) * MAX_DIM_SIZE) { // if the current index within the grid is greater than the max index of the grid,
-      printf("out of bounds \n"); //for debugging c (not needed in MIPS)
-      return(*word == '\n'); //check if at the end of the word, if so, its a match, if not it's not
+      //printf("out of bounds \n"); //for debugging c (not needed in MIPS)
+      return(*(word+1) == '\n'); //check if at the end of the word, if so, its a match, if not it's not
     }
 
     word++; //move forward one character in the string
