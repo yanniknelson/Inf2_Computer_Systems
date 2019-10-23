@@ -89,8 +89,8 @@ int contain(char *string, char *word, int inc, int stepback)
         //if we're not checking diagonally stepback the given amount
         string -= stepback;
       } else {
-	diaglength = MIN((string-grid)/linewidth, (string-grid)%linewidth);
-	//if we're checking diagonally find how many rows 'down' we are and move that value up and to the 'right'
+      	diaglength = MIN((string-grid)/linewidth, (string-grid)%linewidth);
+	      //if we're checking diagonally find how many rows 'down' we are and move that value up and to the 'right'
         string -= (linewidth + 1) * diaglength; 
       }
     }
@@ -101,7 +101,7 @@ int contain(char *string, char *word, int inc, int stepback)
         string -= stepback;
       } else {
         diaglength = MIN((string-grid)/linewidth, (string-grid)%linewidth);
-	//if we're checking diagonally find how many rows 'down' we are and move that value up and to the 'right'
+	      //if we're checking diagonally find how many rows 'down' we are and move that value up and to the 'right'
         string -= (linewidth + 1) * diaglength;
       }
     } 
@@ -118,7 +118,7 @@ int contain(char *string, char *word, int inc, int stepback)
         //if we're not checking diagonally stepback the given amount
         string -= stepback;
       } else {
-	diaglength = MIN((string-grid)/linewidth, (string-grid)%linewidth);
+        diaglength = MIN((string-grid)/linewidth, (string-grid)%linewidth);
         //if we're checking diagonally find how many rows 'down' we are and move that value up and to the 'right'
         string -= (linewidth + 1) * diaglength;
       }
