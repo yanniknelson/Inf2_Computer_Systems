@@ -157,7 +157,7 @@ void FSM()
 
 void instruction_fetch()
 {
-    if (arch_state.control.MemRead) {
+    if (arch_state.control.MemRead && arch_state.state == DECODE) {
         int address = arch_state.curr_pipe_regs.pc;
         arch_state.next_pipe_regs.IR = memory_read(address);
     }
@@ -251,9 +251,11 @@ void memory_access() {
     struct pipe_regs *curr_pipe_regs = &arch_state.curr_pipe_regs;
     struct pipe_regs *next_pipe_regs = &arch_state.next_pipe_regs;
     int address = control->IorD == 0 ? curr_pipe_regs->pc : curr_pipe_regs->ALUOut;
-    if (control->MemRead) {
+    if (control->MemRead && arch_state.state != DECODE) {
         next_pipe_regs->MDR = memory_read(address);
-        printf("read %d from address: %d\n", next_pipe_regs->MDR, address);
+        printf("read ");
+        print_binary_32bit_or_less_lsb(next_pipe_regs->MDR, 32);
+        printf(" from address: %d\n", address);
     }
     else if (control->MemWrite) {
         memory_write(address, curr_pipe_regs->B);
@@ -387,6 +389,13 @@ int main(int argc, const char* argv[])
         // Check exit statements
         if (arch_state.state == EXIT_STATE) { // I.E. EOP instruction!
             printf("Exiting because the exit state was reached \n");
+            print_cache();
+            int lw_cache = arch_state.mem_stats.lw_cache_hits;
+            int lw = arch_state.mem_stats.lw_total;
+            int sw_cache = arch_state.mem_stats.sw_cache_hits;
+            int sw = arch_state.mem_stats.sw_total;
+            printf("%d / %d\n", lw_cache, lw);
+            printf("%d / %d\n", sw_cache, sw);
             break;
         }
         if (arch_state.clock_cycle == BREAK_POINT) {
