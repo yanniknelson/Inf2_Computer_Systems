@@ -55,7 +55,7 @@ void FSM()
 
     //reset control signals
     memset(control, 0, (sizeof(struct ctrl_signals)));
-    printf("next cycle\n");
+    //printf("next cycle\n");
     print_alu_res = 0;
     int opcode = IR_meta->opcode;
     int state = arch_state.state;
@@ -70,7 +70,7 @@ void FSM()
             control->PCWrite = 1;
             control->PCSource = 0;
             state = DECODE;
-            printf("fetched\n");
+            //printf("fetched\n");
             break;
         case DECODE:
             control->ALUSrcA = 0;
@@ -83,21 +83,21 @@ void FSM()
             else if (IR_meta->type == I_TYPE) state = I_TYPE_EXEC;
             else if (opcode == EOP) state = EXIT_STATE;
             else assert(false);
-            printf("decoded state: %d from opcode: %d\n", state, opcode);
+            //printf("decoded state: %d from opcode: %d\n", state, opcode);
             break;
         case MEM_ADDR_COMP:
             control->ALUSrcA = 1;
             control->ALUSrcB = 2;
             control->ALUOp = 0;
             state = opcode == LW ? MEM_ACCESS_LD : MEM_ACCESS_ST;
-            printf("Memory address computation\n");
-            printf("%d\n", control->ALUOp);
+            //printf("Memory address computation\n");
+            //printf("%d\n", control->ALUOp);
             break;
         case MEM_ACCESS_LD:
             control->MemRead = 1;
             control->IorD = 1;
             state = WB_STEP;
-            printf("%d\n", control->ALUOp);
+            //printf("%d\n", control->ALUOp);
             break;
         case WB_STEP:
             control->RegDst = 0;
@@ -139,7 +139,7 @@ void FSM()
         case I_TYPE_EXEC:
             control->ALUSrcA = 1;
             control->ALUSrcB = 2;
-            control->ALUOp = 2;
+            control->ALUOp = 0;
             state = I_TYPE_COMPL;
             print_alu_res = 1;
             break;
@@ -210,7 +210,7 @@ void execute()
             next_pipe_regs->ALUOut = alu_opA - alu_opB;
             break;
         case 2:
-            if (IR_meta->function == ADD || IR_meta->opcode == ADDI)
+            if (IR_meta->function == ADD)
                 next_pipe_regs->ALUOut = alu_opA + alu_opB;
             else if (IR_meta->function == SLT)
                 next_pipe_regs->ALUOut = (alu_opA - alu_opB) >> 31 && 1;
@@ -221,22 +221,22 @@ void execute()
         default:
             assert(false);
     }
-    if (print_alu_res) printf("ALU result: %d\n", next_pipe_regs->ALUOut);
+    //if (print_alu_res) printf("ALU result: %d\n", next_pipe_regs->ALUOut);
     if ((control->PCWriteCond && next_pipe_regs->ALUOut == 0) || control->PCWrite){
         // PC calculation
-        printf("pcsource = %d\n", control->PCSource);
+        //printf("pcsource = %d\n", control->PCSource);
         switch (control->PCSource) {
             case 0:
                 next_pipe_regs->pc = next_pipe_regs->ALUOut;
-                printf("saving %d + %d =  %d in PC\n", alu_opA, alu_opB, next_pipe_regs->pc);
+                //printf("saving %d + %d =  %d in PC\n", alu_opA, alu_opB, next_pipe_regs->pc);
                 break;
             case 1:
                 next_pipe_regs->pc = curr_pipe_regs->ALUOut;
-                printf("saving current aluout = %d in PC\n", next_pipe_regs->pc);
+                //printf("saving current aluout = %d in PC\n", next_pipe_regs->pc);
                 break;
             case 2:
                 next_pipe_regs->pc = IR_meta->jmp_offset << 2;
-                printf("saving jump = %d in PC\n", next_pipe_regs->pc);
+                //printf("saving jump = %d in PC\n", next_pipe_regs->pc);
                 break;
             default:
                 assert(false);
@@ -253,13 +253,13 @@ void memory_access() {
     int address = control->IorD == 0 ? curr_pipe_regs->pc : curr_pipe_regs->ALUOut;
     if (control->MemRead && arch_state.state != DECODE) {
         next_pipe_regs->MDR = memory_read(address);
-        printf("read ");
-        print_binary_32bit_or_less_lsb(next_pipe_regs->MDR, 32);
-        printf(" from address: %d\n", address);
+        //printf("read ");
+        //print_binary_32bit_or_less_lsb(next_pipe_regs->MDR, 32);
+        //printf(" from address: %d\n", address);
     }
     else if (control->MemWrite) {
         memory_write(address, curr_pipe_regs->B);
-        printf("Wrote %d at address %d\n", curr_pipe_regs->B, address);
+        //printf("Wrote %d at address %d\n", curr_pipe_regs->B, address);
     }
 }
 
@@ -273,8 +273,8 @@ void write_back()
         int write_reg_id = control->RegDst == 0? IR_meta->reg_16_20 : IR_meta->reg_11_15;
         check_is_valid_reg_id(write_reg_id);
         int write_data = control->MemtoReg == 0 ? curr_pipe_regs->ALUOut : curr_pipe_regs->MDR;
-        printf("Register address mux is %d so saving in register $%d\n", control->RegDst, write_reg_id);
-        printf("Data mux is %d so saving %d in said register\n", control->MemtoReg, write_data);
+        //printf("Register address mux is %d so saving in register $%d\n", control->RegDst, write_reg_id);
+        //printf("Data mux is %d so saving %d in said register\n", control->MemtoReg, write_data);
         if (write_reg_id > 0) {
             arch_state.registers[write_reg_id] = write_data;
             //printf("Reg $%u = %d \n", write_reg_id, write_data);
@@ -340,7 +340,7 @@ void assign_pipeline_registers_for_the_next_cycle()
 
     if (control->IRWrite) {
         curr_pipe_regs->IR = next_pipe_regs->IR;
-        printf("PC %d: ", curr_pipe_regs->pc / 4);
+        //printf("PC %d: ", curr_pipe_regs->pc / 4);
         set_up_IR_meta(curr_pipe_regs->IR, IR_meta);
     }
     curr_pipe_regs->ALUOut = next_pipe_regs->ALUOut;
@@ -388,8 +388,8 @@ int main(int argc, const char* argv[])
         arch_state.clock_cycle++;
         // Check exit statements
         if (arch_state.state == EXIT_STATE) { // I.E. EOP instruction!
-            printf("Exiting because the exit state was reached \n");
-            print_cache();
+            //printf("Exiting because the exit state was reached \n");
+            //print_cache();
             int lw_cache = arch_state.mem_stats.lw_cache_hits;
             int lw = arch_state.mem_stats.lw_total;
             int sw_cache = arch_state.mem_stats.sw_cache_hits;

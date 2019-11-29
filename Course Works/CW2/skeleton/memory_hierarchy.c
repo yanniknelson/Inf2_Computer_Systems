@@ -17,7 +17,7 @@ typedef enum Bool {False, True} Bool;
 typedef struct cache_line {
     Bool valid;
     int tag;
-    uint8_t* block;
+    uint8_t block[16];
 } cache_line;
 
 cache_line* cache;
@@ -62,9 +62,9 @@ void print_cache(){
 Bool search_cache(int address){
     int tag = get_piece_of_a_word(address, 32-arch_state.bits_for_cache_tag, arch_state.bits_for_cache_tag);
     int index = get_piece_of_a_word(address, 4, index_size);
-    printf("%d, %d\n", tag, index);
+    //printf("%d, %d\n", tag, index);
     if (cache[index].tag == tag && cache[index].valid) {
-        printf("hit\n");
+        //printf("hit\n");
         return True;
     } 
     return False;
@@ -88,10 +88,10 @@ void memory_state_init(struct architectural_state* arch_state_ptr) {
         cache = malloc(cache_size/16 * sizeof(cache_line));
         for (int i = 0; i < cache_size/16; i++) {
             cache[i].valid = False;
-            cache[i].tag = NULL;
-            cache[i].block = malloc(16*sizeof(uint8_t));
+            cache[i].tag = 0;
+            //cache[i].block = malloc(16*sizeof(uint8_t));
             for (int j = 0; j < 16; j++) {
-                cache[i].block[j] = NULL;
+                cache[i].block[j] = 0;
             }
         }
         print_cache();
@@ -102,7 +102,7 @@ void memory_state_init(struct architectural_state* arch_state_ptr) {
 
 // returns data on memory[address / 4]
 int memory_read(int address){
-    printf("read called\n");
+    //printf("read called\n");
     arch_state.mem_stats.lw_total++;
     check_address_is_word_aligned(address);
     if(cache_size == 0){
@@ -115,15 +115,15 @@ int memory_read(int address){
         int offset = get_piece_of_a_word(address, 0, 4);
         if (search_cache(address)) {
             arch_state.mem_stats.lw_cache_hits++;
-            printf("get word %d\n",offset);
+            //printf("get word %d\n",offset);
             int word = 0;
             for (int i = 0; i < 4; i++){
-                print_byte(cache[index].block[offset+i]);
-                printf("\n");
+                //print_byte(cache[index].block[offset+i]);
+                //printf("\n");
                 word += cache[index].block[offset+i] << (8*(3-i));
             }
-            print_binary_32bit_or_less_lsb(word, 32);
-            printf("\n");
+            //print_binary_32bit_or_less_lsb(word, 32);
+            //printf("\n");
             return word;
         } else {
             cache[index].valid = 1;
@@ -136,7 +136,7 @@ int memory_read(int address){
                     cache[index].block[a*4 + b] = get_piece_of_a_word(data, 32-(b+1)*8, 8);
                 }
             }
-            print_cache();
+            //print_cache();
             return (int) (int) arch_state.memory[address / 4];
         }
 
@@ -148,7 +148,7 @@ int memory_read(int address){
 
 // writes data on memory[address / 4]
 void memory_write(int address, int write_data){
-    printf("incrementing sw total\n");
+    //printf("incrementing sw total\n");
     arch_state.mem_stats.sw_total++;
     check_address_is_word_aligned(address);
 
